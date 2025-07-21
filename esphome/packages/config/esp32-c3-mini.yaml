@@ -6,6 +6,7 @@ substitutions:
   pir_pin: A4
   rgb_led_pin: GPIO7
   rgb_led_type: GRB
+  rgb_led_order: GRB
   sen0395_io_pin: A2
   uart_rx_pin: GPIO20
   uart_tx_pin: GPIO21
