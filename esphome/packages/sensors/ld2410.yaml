@@ -6,10 +6,10 @@ uart:
   baud_rate: 256000
   parity: NONE
   stop_bits: 1
-  id: ld2410
+  id: ld2410_uart
 
 ld2410:
-  uart_id: ld2410
+  uart_id: ld2410_uart
 
 number:
   - platform: ld2410
