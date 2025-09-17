@@ -12,21 +12,6 @@ substitutions:
   uart_tx_pin: GPIO21
 
 esphome:
-  on_boot:
-    priority: 600  # Run very early in boot sequence
-    then:
-      - lambda: |-
-          // Force release GPIO20/21 from USB control
-          gpio_reset_pin(${uart_rx_pin});
-          gpio_reset_pin(${uart_tx_pin});
-          
-          // Configure as UART pins
-          gpio_set_direction(${uart_rx_pin}, GPIO_MODE_OUTPUT);
-          gpio_set_direction(${uart_tx_pin}, GPIO_MODE_INPUT);
-          gpio_set_pull_mode(${uart_tx_pin}, GPIO_PULLUP_ONLY);
-          
-          // Disable USB serial JTAG pad
-          USB_SERIAL_JTAG.conf0.usb_pad_enable = 0;
   platformio_options:
     board_build.extra_flags:
       - "-DARDUINO_USB_CDC_ON_BOOT=0"
@@ -37,6 +22,7 @@ esp32:
   variant: ESP32C3
   framework:
     type: esp-idf
+    version: 5.3.2  # Critical: Use 5.3.2 specifically
 
 wifi:
   output_power: 8.5dBm
