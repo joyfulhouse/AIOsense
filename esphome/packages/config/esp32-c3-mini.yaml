@@ -30,8 +30,6 @@ esp32:
       CONFIG_ESP_PHY_CALIBRATION_AND_DATA_STORAGE: y
       CONFIG_UART_ISR_IN_IRAM: y  # Place UART ISR in IRAM for reliability
 
-logger:
-  hardware_uart: UART1
 wifi:
   output_power: 8.5dBm
 
