@@ -22,7 +22,16 @@ esp32:
   variant: ESP32C3
   framework:
     type: esp-idf
-      version: 5.4.1
+    version: 5.4.1
+    sdkconfig_options:
+      CONFIG_ESP_CONSOLE_UART_NUM: -1  # Disable console UART
+      CONFIG_ESP_CONSOLE_USB_CDC: n     # Disable USB CDC
+      CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG: n  # Disable USB Serial/JTAG
+      CONFIG_ESP_PHY_CALIBRATION_AND_DATA_STORAGE: y
+      CONFIG_UART_ISR_IN_IRAM: y  # Place UART ISR in IRAM for reliability
+
+logger:
+  hardware_uart: UART1
 wifi:
   output_power: 8.5dBm
 
