@@ -7,10 +7,7 @@ uart:
   parity: NONE
   stop_bits: 1
   id: ld2410
-  # Add explicit UART configuration
-  rx_buffer_size: 512
 
-  
 ld2410:
 
 number:
