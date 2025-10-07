@@ -3,6 +3,7 @@ substitutions:
 
 packages:
   wifi_sensors: !include ../sensors/wifi.yaml
+  wifi_scanning: !include ../sensors/wifi_scanning.yaml
 
 esphome:
   name: "${name}"
