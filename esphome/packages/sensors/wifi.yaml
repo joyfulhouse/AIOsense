@@ -1,0 +1,74 @@
+# WiFi Health and Diagnostics Sensors
+# Monitors WiFi connection quality, signal strength, and network statistics
+
+substitutions:
+  wifi_update_interval: 60s
+
+sensor:
+  # WiFi Signal Strength - Updates every 60 seconds
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi Signal"
+    id: wifi_signal_db
+    update_interval: ${wifi_update_interval}
+    entity_category: diagnostic
+
+  # WiFi Signal Percentage (0-100%)
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "${friendly_name} WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: diagnostic
+    icon: "mdi:wifi-strength-2"
+
+  # WiFi Connection Uptime (how long connected to current AP)
+  - platform: uptime
+    name: "${friendly_name} WiFi Uptime"
+    id: wifi_uptime_sensor
+    update_interval: ${wifi_update_interval}
+    entity_category: diagnostic
+    filters:
+      - lambda: return x / 3600.0;
+    unit_of_measurement: "h"
+    accuracy_decimals: 1
+    icon: "mdi:timer-outline"
+
+text_sensor:
+  # WiFi Info - SSID
+  - platform: wifi_info
+    ssid:
+      name: "${friendly_name} WiFi SSID"
+      entity_category: diagnostic
+      icon: "mdi:wifi"
+
+    # WiFi Info - IP Address
+    ip_address:
+      name: "${friendly_name} WiFi IP"
+      entity_category: diagnostic
+      icon: "mdi:ip-network"
+
+    # WiFi Info - BSSID (MAC address of AP)
+    bssid:
+      name: "${friendly_name} WiFi BSSID"
+      entity_category: diagnostic
+      icon: "mdi:access-point-network"
+
+    # WiFi Info - MAC Address
+    mac_address:
+      name: "${friendly_name} WiFi MAC"
+      entity_category: diagnostic
+      icon: "mdi:network-outline"
+
+    # WiFi Info - DNS Address
+    dns_address:
+      name: "${friendly_name} WiFi DNS"
+      entity_category: diagnostic
+      icon: "mdi:dns"
+
+binary_sensor:
+  # WiFi Connection Status
+  - platform: status
+    name: "${friendly_name} WiFi Status"
+    entity_category: diagnostic
+    device_class: connectivity

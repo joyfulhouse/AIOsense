@@ -1,6 +1,9 @@
 substitutions:
   version: "3.0.0"
 
+packages:
+  wifi_sensors: !include ../sensors/wifi.yaml
+
 esphome:
   name: "${name}"
   friendly_name: "${friendly_name}"
@@ -34,7 +37,3 @@ button:
 binary_sensor:
   - platform: status
     name: "Status"
-
-sensor:
-  - platform: wifi_signal
-    name: "Wifi Signal"
