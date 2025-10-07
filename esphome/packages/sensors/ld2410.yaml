@@ -6,7 +6,8 @@ uart:
   baud_rate: 256000
   parity: NONE
   stop_bits: 1
-  id: ld2410
+  id: ld2410_uart
+  rx_buffer_size: 512
 
 ld2410:
 
