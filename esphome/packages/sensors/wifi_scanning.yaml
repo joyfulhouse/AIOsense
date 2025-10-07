@@ -14,6 +14,10 @@
 # - Channel utilization analysis for optimization
 # - Network count and signal strength mapping
 
+esphome:
+  includes:
+    - "esp_wifi.h"
+
 substitutions:
   wifi_scan_interval: "5min"
   # Known SSIDs to check for (customize for your network)
@@ -75,21 +79,18 @@ interval:
   - interval: ${wifi_scan_interval}
     then:
       - lambda: |-
-          #ifdef USE_ESP_IDF
-          #include "esp_wifi.h"
-          #include <cstring>
-
           ESP_LOGD("wifi_scan", "Starting WiFi network scan (ESP-IDF)...");
 
           // Configure scan parameters
-          wifi_scan_config_t scan_config = {};
+          wifi_scan_config_t scan_config;
+          memset(&scan_config, 0, sizeof(wifi_scan_config_t));
           scan_config.ssid = NULL;
           scan_config.bssid = NULL;
           scan_config.channel = 0;
           scan_config.show_hidden = false;
           scan_config.scan_type = WIFI_SCAN_TYPE_ACTIVE;
           scan_config.scan_time.active.min = 100;
-          scan_config.active.max = 300;
+          scan_config.scan_time.active.max = 300;
 
           // Start scan
           esp_err_t err = esp_wifi_scan_start(&scan_config, true);
@@ -179,6 +180,3 @@ interval:
 
           // Clean up
           delete[] ap_records;
-          #else
-          ESP_LOGW("wifi_scan", "WiFi scanning only supported on ESP-IDF framework");
-          #endif
