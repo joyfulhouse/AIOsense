@@ -1,8 +1,19 @@
 # WiFi Health and Diagnostics Sensors
 # Monitors WiFi connection quality, signal strength, and network statistics
+#
+# DEPLOYMENT STRATEGY:
+# - Basic monitoring (signal, info, alerts) -> Deploy to ALL devices
+# - WiFi scanning (optional) -> Deploy to 3-4 strategic devices only
+#   Recommended devices: living-room, office-desk, adu-main, shed
+#
+# PERFORMANCE IMPACT:
+# - Signal monitoring: Negligible (<1% CPU)
+# - Active scanning: 2-3 second interruption per scan (if enabled)
 
 substitutions:
   wifi_update_interval: 60s
+  wifi_scan_interval: 5min  # Only used if scanning is enabled
+  wifi_weak_signal_threshold: "-70"  # dBm threshold for weak signal alert
 
 sensor:
   # WiFi Signal Strength - Updates every 60 seconds
@@ -72,3 +83,14 @@ binary_sensor:
     name: "${friendly_name} WiFi Status"
     entity_category: diagnostic
     device_class: connectivity
+
+  # Alert when WiFi signal is too weak
+  - platform: template
+    name: "${friendly_name} Weak WiFi Signal"
+    device_class: problem
+    entity_category: diagnostic
+    lambda: |-
+      return id(wifi_signal_db).state < ${wifi_weak_signal_threshold};
+    filters:
+      - delayed_on: 60s  # Only alert if weak for 60 seconds
+      - delayed_off: 60s

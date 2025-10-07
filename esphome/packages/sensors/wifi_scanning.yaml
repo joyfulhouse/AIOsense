@@ -1,0 +1,156 @@
+# WiFi Network Scanning (OPTIONAL)
+# Deploy to 3-4 strategic devices only for network health monitoring
+#
+# WARNING: Active WiFi scanning causes brief interruptions (~2-3 seconds)
+# Recommended devices: living-room, office-desk, adu-main, shed
+#
+# To enable, add this to your device's main YAML:
+# packages:
+#   wifi_scanning: !include packages/sensors/wifi_scanning.yaml
+#
+# FEATURES:
+# - Detects all nearby WiFi networks
+# - Identifies potential rogue APs (suspicious SSIDs)
+# - Channel utilization analysis for optimization
+# - Network count and signal strength mapping
+
+substitutions:
+  wifi_scan_interval: "5min"
+  # Known SSIDs to check for (customize for your network)
+  known_ssid_1: "joyful.house"
+  known_ssid_2: "joyful.house.iot"
+
+sensor:
+  # Number of WiFi networks detected
+  - platform: template
+    name: "${friendly_name} WiFi Networks Count"
+    id: wifi_scan_count
+    icon: "mdi:wifi-strength-outline"
+    entity_category: diagnostic
+
+  # Number of potential rogue APs
+  - platform: template
+    name: "${friendly_name} Rogue AP Count"
+    id: rogue_ap_count
+    icon: "mdi:alert-circle"
+    entity_category: diagnostic
+
+  # Channel utilization counters
+  - platform: template
+    name: "${friendly_name} Channel 1 Count"
+    id: channel_1_count
+    icon: "mdi:wifi-strength-1"
+    entity_category: diagnostic
+
+  - platform: template
+    name: "${friendly_name} Channel 6 Count"
+    id: channel_6_count
+    icon: "mdi:wifi-strength-2"
+    entity_category: diagnostic
+
+  - platform: template
+    name: "${friendly_name} Channel 11 Count"
+    id: channel_11_count
+    icon: "mdi:wifi-strength-3"
+    entity_category: diagnostic
+
+text_sensor:
+  # List of all detected networks (semicolon separated)
+  # Format: SSID|BSSID|RSSI|Channel;
+  - platform: template
+    name: "${friendly_name} WiFi Networks List"
+    id: wifi_networks_found
+    icon: "mdi:wifi-marker"
+    entity_category: diagnostic
+
+  # List of suspicious/rogue networks
+  - platform: template
+    name: "${friendly_name} Rogue AP List"
+    id: rogue_ap_list
+    icon: "mdi:alert"
+    entity_category: diagnostic
+
+interval:
+  # Scan WiFi networks periodically
+  - interval: ${wifi_scan_interval}
+    then:
+      - lambda: |-
+          ESP_LOGD("wifi_scan", "Starting WiFi network scan...");
+
+          // Trigger WiFi scan (async=false, show_hidden=false, passive=false, max_ms_per_chan=300)
+          int n = WiFi.scanNetworks(false, false, false, 300);
+
+          ESP_LOGD("wifi_scan", "Found %d networks", n);
+
+          if (n < 0) {
+            ESP_LOGE("wifi_scan", "Scan failed with error code: %d", n);
+            return;
+          }
+
+          // Store scan results
+          id(wifi_scan_count).publish_state(n);
+
+          // Initialize counters
+          bool found_known_1 = false;
+          bool found_known_2 = false;
+          int rogue_count = 0;
+          int ch1 = 0, ch6 = 0, ch11 = 0;
+          std::string all_networks = "";
+          std::string rogue_networks = "";
+
+          // Process each network
+          for (int i = 0; i < n; i++) {
+            String ssid = WiFi.SSID(i);
+            String bssid = WiFi.BSSIDstr(i);
+            int32_t rssi = WiFi.RSSI(i);
+            int32_t channel = WiFi.channel(i);
+
+            // Build network list (limit to prevent overflow)
+            if (all_networks.length() < 800) {
+              char network_info[200];
+              snprintf(network_info, sizeof(network_info),
+                      "%s|%s|%d|%d;",
+                      ssid.c_str(), bssid.c_str(), rssi, channel);
+              all_networks += network_info;
+            }
+
+            // Channel counting
+            if (channel == 1) ch1++;
+            else if (channel == 6) ch6++;
+            else if (channel == 11) ch11++;
+
+            // Check for known SSIDs
+            if (ssid == "${known_ssid_1}") {
+              found_known_1 = true;
+            } else if (ssid == "${known_ssid_2}") {
+              found_known_2 = true;
+            }
+            // Detect suspicious networks (similar to known SSIDs)
+            else if (ssid.indexOf("joyful") >= 0 ||
+                     ssid.indexOf("house") >= 0) {
+              rogue_count++;
+              if (rogue_networks.length() < 400) {
+                rogue_networks += ssid + " (" + bssid + ");";
+              }
+            }
+          }
+
+          // Publish results
+          id(wifi_networks_found).publish_state(all_networks.c_str());
+          id(rogue_ap_count).publish_state(rogue_count);
+          id(channel_1_count).publish_state(ch1);
+          id(channel_6_count).publish_state(ch6);
+          id(channel_11_count).publish_state(ch11);
+
+          if (rogue_count > 0) {
+            id(rogue_ap_list).publish_state(rogue_networks.c_str());
+            ESP_LOGW("wifi_scan", "ALERT: %d potential rogue APs detected!", rogue_count);
+          } else {
+            id(rogue_ap_list).publish_state("None detected");
+          }
+
+          ESP_LOGD("wifi_scan", "Scan complete: %d networks, Ch1=%d Ch6=%d Ch11=%d",
+                   n, ch1, ch6, ch11);
+
+          // Clean up scan results
+          WiFi.scanDelete();
