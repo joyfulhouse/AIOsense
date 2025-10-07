@@ -12,5 +12,11 @@ kicad/AIOsense/*_sch-bak
 kicad/AIOsense/fp-info-cache
 kicad/AIOsense/manufactoring/
 
-# other
+# ESPHome
+.venv/
 venv/
+esphome/test.yaml
+esphome/secrets.yaml
+esphome/.esphome/
+logs/
+*.log

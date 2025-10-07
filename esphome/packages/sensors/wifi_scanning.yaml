@@ -15,8 +15,8 @@
 # - Network count and signal strength mapping
 
 esphome:
-  includes:
-    - "esp_wifi.h"
+  libraries:
+    - "ESP-IDF"
 
 substitutions:
   wifi_scan_interval: "5min"
